@@ -12,6 +12,12 @@ let loginWindow = null;
 let silentLoginWindow = null;
 let settingsWindow = null;
 let tray = null;
+let iconGeneratorWindow = null;
+
+// Tray icon state
+let cachedUsageData = null;
+let trayUpdateInterval = null;
+let lastTrayUpdate = 0;
 
 // Window configuration
 const WIDGET_WIDTH = 480;
@@ -323,6 +329,117 @@ async function attemptSilentLogin() {
   });
 }
 
+// Create hidden window for generating tray icons
+function createIconGeneratorWindow() {
+  if (iconGeneratorWindow) return;
+
+  iconGeneratorWindow = new BrowserWindow({
+    width: 100,
+    height: 100,
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  iconGeneratorWindow.loadFile(path.join(__dirname, 'src/icon-generator.html'));
+
+  iconGeneratorWindow.on('closed', () => {
+    iconGeneratorWindow = null;
+  });
+}
+
+// Generate tray icon with circular progress indicator
+async function generateTrayIcon(percentage, colors, showText = true) {
+  const { nativeImage } = require('electron');
+
+  if (!iconGeneratorWindow) {
+    createIconGeneratorWindow();
+    // Wait for window to load
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  return new Promise((resolve) => {
+    ipcMain.once('icon-generated', (event, dataUrl) => {
+      resolve(nativeImage.createFromDataURL(dataUrl));
+    });
+
+    iconGeneratorWindow.webContents.send('generate-icon', { percentage, colors, showText });
+  });
+}
+
+// Update tray icon with current usage data
+async function updateTrayIcon() {
+  if (!tray) return;
+
+  // If no data yet, show default icon
+  if (!cachedUsageData) {
+    tray.setImage(path.join(__dirname, 'assets/tray-icon.png'));
+    tray.setToolTip('Claude Usage Widget - Loading...');
+    return;
+  }
+
+  // Get tray settings from store
+  const traySettings = store.get('traySettings', {
+    displayMode: 'session',
+    showText: false,
+    colors: {
+      normal: { start: '#8b5cf6', end: '#a78bfa' },
+      warning: { start: '#f59e0b', end: '#fbbf24' },
+      danger: { start: '#ef4444', end: '#f87171' }
+    }
+  });
+
+  // Get appropriate usage data based on display mode
+  let percentage, resetsAt;
+  if (traySettings.displayMode === 'weekly') {
+    percentage = cachedUsageData.seven_day?.utilization || 0;
+    resetsAt = cachedUsageData.seven_day?.resets_at;
+  } else {
+    percentage = cachedUsageData.five_hour?.utilization || 0;
+    resetsAt = cachedUsageData.five_hour?.resets_at;
+  }
+
+  // Generate and set new icon
+  try {
+    const icon = await generateTrayIcon(percentage, traySettings.colors, traySettings.showText);
+    tray.setImage(icon);
+
+    // Update tooltip with detailed info
+    const modeLabel = traySettings.displayMode === 'weekly' ? '7-day' : '5-hour';
+    const resetTime = resetsAt ? new Date(resetsAt).toLocaleString() : 'N/A';
+    tray.setToolTip(
+      `Claude Usage: ${Math.round(percentage)}% (${modeLabel})\nResets: ${resetTime}`
+    );
+  } catch (error) {
+    console.error('Failed to generate tray icon:', error);
+  }
+}
+
+// Throttled tray update to avoid excessive updates
+function updateTrayIconThrottled() {
+  const now = Date.now();
+  const interval = store.get('trayUpdateInterval', 30) * 1000; // Convert to ms
+
+  if (now - lastTrayUpdate >= interval) {
+    updateTrayIcon();
+    lastTrayUpdate = now;
+  }
+}
+
+// Start periodic tray icon updates
+function startTrayUpdateTimer() {
+  if (trayUpdateInterval) clearInterval(trayUpdateInterval);
+
+  const interval = store.get('trayUpdateInterval', 30) * 1000;
+  trayUpdateInterval = setInterval(() => {
+    if (cachedUsageData) {
+      updateTrayIcon();
+    }
+  }, interval);
+}
+
 function createTray() {
   try {
     tray = new Tray(path.join(__dirname, 'assets/tray-icon.png'));
@@ -559,10 +676,71 @@ ipcMain.handle('fetch-usage-data', async () => {
   }
 });
 
+// Tray icon IPC handlers
+ipcMain.on('usage-data-update', (event, data) => {
+  cachedUsageData = data;
+  updateTrayIconThrottled();
+});
+
+ipcMain.handle('get-tray-settings', () => {
+  return store.get('traySettings', {
+    displayMode: 'session',
+    showText: false,
+    colors: {
+      normal: { start: '#8b5cf6', end: '#a78bfa' },
+      warning: { start: '#f59e0b', end: '#fbbf24' },
+      danger: { start: '#ef4444', end: '#f87171' }
+    }
+  });
+});
+
+ipcMain.on('set-tray-settings', (event, settings) => {
+  store.set('traySettings', settings);
+  updateTrayIcon(); // Immediate update
+});
+
+ipcMain.handle('get-tray-update-interval', () => {
+  return store.get('trayUpdateInterval', 30);
+});
+
+ipcMain.on('set-tray-update-interval', (event, seconds) => {
+  store.set('trayUpdateInterval', seconds);
+  startTrayUpdateTimer(); // Restart timer with new interval
+});
+
+// Theme settings IPC handlers
+ipcMain.handle('get-theme-settings', () => {
+  return store.get('themeSettings', {
+    backgroundStart: '#1e1e2e',
+    backgroundEnd: '#2a2a3e',
+    textPrimary: '#e0e0e0',
+    textSecondary: '#a0a0a0',
+    titleBarBg: '#000000',
+    titleBarOpacity: 30,
+    borderColor: '#ffffff',
+    borderOpacity: 10
+  });
+});
+
+ipcMain.handle('set-theme-settings', (event, theme) => {
+  store.set('themeSettings', theme);
+  return true;
+});
+
+ipcMain.handle('notify-theme-change', (event, theme) => {
+  // Notify main window to update theme
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('theme-changed', theme);
+  }
+  return true;
+});
+
 // App lifecycle
 app.whenReady().then(() => {
   createMainWindow();
   createTray();
+  createIconGeneratorWindow();
+  startTrayUpdateTimer();
 
   // Check if we have credentials
   // const hasCredentials = store.get('sessionKey') && store.get('organizationId');
@@ -571,6 +749,15 @@ app.whenReady().then(() => {
   //     createLoginWindow();
   //   }, 1000);
   // }
+});
+
+app.on('before-quit', () => {
+  if (trayUpdateInterval) {
+    clearInterval(trayUpdateInterval);
+  }
+  if (iconGeneratorWindow && !iconGeneratorWindow.isDestroyed()) {
+    iconGeneratorWindow.destroy();
+  }
 });
 
 app.on('window-all-closed', () => {
