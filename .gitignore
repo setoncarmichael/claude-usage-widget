@@ -36,3 +36,4 @@ yarn-error.log*
 # Cache
 .cache/
 .temp/
+CLAUDE_NOTES.md
