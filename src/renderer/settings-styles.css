@@ -95,10 +95,11 @@ body {
 }
 
 .settings-section h2 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
     color: #e0e0e0;
+    letter-spacing: 0.3px;
 }
 
 /* 2-Column Grid for Color Pickers */
@@ -233,7 +234,11 @@ body {
 
 /* Setting Groups */
 .setting-group {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
+}
+
+.setting-group:last-child {
+    margin-bottom: 0;
 }
 
 .setting-group h3 {
@@ -308,6 +313,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: 12px;
     margin-bottom: 20px;
 }
 
@@ -436,7 +442,17 @@ body {
 
 /* Collapsible Sections */
 .collapsible-section {
-    margin-bottom: 16px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.collapsible-section:first-child {
+    margin-top: 0;
+}
+
+/* Add extra space when a setting-group follows a collapsible-section */
+.collapsible-section + .setting-group {
+    margin-top: 28px;
 }
 
 .collapsible-header {
@@ -485,6 +501,22 @@ body {
     max-height: 1000px;
     padding: 16px;
     padding-top: 16px;
+}
+
+/* Setting Item Spacing */
+.setting-item {
+    margin-bottom: 12px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item .setting-description {
+    margin: 4px 0 0 60px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
 }
 
 /* Theme Grid */

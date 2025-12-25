@@ -289,17 +289,25 @@ body {
 /* Main Content */
 .content {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .usage-section {
-    display: grid;
-    grid-template-columns: 125px 1fr 45px 100px;
-    /* Fixed width labels for alignment */
+    display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 2px;
-    padding: 0 16px;
-    height: 32px;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding: 0 20px;
+    min-height: 32px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .usage-section:last-of-type {
@@ -331,6 +339,8 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 110px;
 }
 
 .usage-percentage {
@@ -338,6 +348,8 @@ body {
     font-size: 13px;
     font-weight: 700;
     text-align: right;
+    flex-shrink: 0;
+    min-width: 40px;
 }
 
 /* Progress Bar */
@@ -347,7 +359,7 @@ body {
     border-radius: 3px;
     overflow: hidden;
     margin: 0;
-    /* Remove margin as it is in grid */
+    flex: 1;
     min-width: 80px;
 }
 
@@ -372,12 +384,10 @@ body {
 .timer-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    /* Text on left, chart on right */
+    justify-content: flex-end;
     gap: 8px;
-    /* space between text and pie chart */
-    padding-left: 8px;
-    /* Alignment adjustment */
+    flex-shrink: 0;
+    min-width: 90px;
 }
 
 .mini-timer {

@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window position
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
   setWindowPosition: (position) => ipcRenderer.invoke('set-window-position', position),
+  setWindowHeight: (height) => ipcRenderer.send('set-window-height', height),
+  setWindowSize: (size) => ipcRenderer.send('set-window-size', size),
 
   // Event listeners
   onLoginSuccess: (callback) => {
@@ -60,5 +62,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   notifyThemeChange: (theme) => ipcRenderer.invoke('notify-theme-change', theme),
   onThemeChanged: (callback) => {
     ipcRenderer.on('theme-changed', (event, theme) => callback(theme));
+  },
+
+  // App settings
+  getAppSettings: () => ipcRenderer.invoke('get-app-settings'),
+  setAppSettings: (settings) => ipcRenderer.invoke('set-app-settings', settings),
+
+  // UI visibility settings
+  getUIVisibility: () => ipcRenderer.invoke('get-ui-visibility'),
+  setUIVisibility: (visibility) => ipcRenderer.invoke('set-ui-visibility', visibility),
+  onUIVisibilityChanged: (callback) => {
+    ipcRenderer.on('ui-visibility-changed', (event, visibility) => callback(visibility));
   }
 });

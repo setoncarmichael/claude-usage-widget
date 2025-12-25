@@ -31,10 +31,14 @@ function createMainWindow() {
   const windowOptions = {
     width: WIDGET_WIDTH,
     height: WIDGET_HEIGHT,
+    minWidth: 320,
+    maxWidth: 600,
+    minHeight: 96,
+    maxHeight: 180,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    resizable: false,
+    resizable: true,
     skipTaskbar: false,
     icon: path.join(__dirname, 'assets/icon.ico'),
     webPreferences: {
@@ -579,7 +583,12 @@ ipcMain.on('minimize-window', () => {
 });
 
 ipcMain.on('close-window', () => {
-  app.quit();
+  const appSettings = store.get('appSettings', { closeToTray: false });
+  if (appSettings.closeToTray) {
+    mainWindow.hide();
+  } else {
+    app.quit();
+  }
 });
 
 ipcMain.handle('get-window-position', () => {
@@ -595,6 +604,19 @@ ipcMain.handle('set-window-position', (event, { x, y }) => {
     return true;
   }
   return false;
+});
+
+ipcMain.on('set-window-height', (event, height) => {
+  if (mainWindow) {
+    const currentBounds = mainWindow.getBounds();
+    mainWindow.setSize(currentBounds.width, Math.round(height));
+  }
+});
+
+ipcMain.on('set-window-size', (event, { width, height }) => {
+  if (mainWindow) {
+    mainWindow.setSize(Math.round(width), Math.round(height));
+  }
 });
 
 ipcMain.on('open-external', (event, url) => {
@@ -735,12 +757,83 @@ ipcMain.handle('notify-theme-change', (event, theme) => {
   return true;
 });
 
+// App settings
+ipcMain.handle('get-app-settings', () => {
+  return store.get('appSettings', {
+    startOnBoot: false,
+    startMinimized: false,
+    closeToTray: false,
+    uiUpdateInterval: 30 // 30 seconds
+  });
+});
+
+ipcMain.handle('set-app-settings', (event, settings) => {
+  const currentSettings = store.get('appSettings', {});
+  const newSettings = { ...currentSettings, ...settings };
+  store.set('appSettings', newSettings);
+
+  // Apply auto-launch setting
+  if (settings.hasOwnProperty('startOnBoot')) {
+    app.setLoginItemSettings({
+      openAtLogin: settings.startOnBoot,
+      path: process.execPath
+    });
+  }
+
+  return true;
+});
+
+// UI visibility settings
+ipcMain.handle('get-ui-visibility', () => {
+  return store.get('uiVisibility', {
+    showSessionSection: true,
+    showWeeklySection: true,
+    sessionShowLabel: true,
+    sessionShowBar: true,
+    sessionShowPercentage: true,
+    sessionShowCircle: true,
+    sessionShowTime: true,
+    weeklyShowLabel: true,
+    weeklyShowBar: true,
+    weeklyShowPercentage: true,
+    weeklyShowCircle: true,
+    weeklyShowTime: true
+  });
+});
+
+ipcMain.handle('set-ui-visibility', (event, visibility) => {
+  store.set('uiVisibility', visibility);
+  // Notify main window to update visibility
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('ui-visibility-changed', visibility);
+  }
+  return true;
+});
+
 // App lifecycle
 app.whenReady().then(() => {
+  // Apply startup settings
+  const appSettings = store.get('appSettings', {
+    startOnBoot: false,
+    startMinimized: false,
+    closeToTray: false
+  });
+
+  // Set auto-launch
+  app.setLoginItemSettings({
+    openAtLogin: appSettings.startOnBoot,
+    path: process.execPath
+  });
+
   createMainWindow();
   createTray();
   createIconGeneratorWindow();
   startTrayUpdateTimer();
+
+  // Start minimized if enabled
+  if (appSettings.startMinimized) {
+    mainWindow.hide();
+  }
 
   // Check if we have credentials
   // const hasCredentials = store.get('sessionKey') && store.get('organizationId');

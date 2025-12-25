@@ -8,7 +8,6 @@ const elements = {
     colorDangerEnd: document.getElementById('colorDangerEnd'),
     resetColorsBtn: document.getElementById('resetColorsBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
-    coffeeBtn: document.getElementById('coffeeBtn'),
     minimizeBtn: document.getElementById('minimizeBtn'),
     closeBtn: document.getElementById('closeBtn'),
     // Tray icon elements
@@ -45,7 +44,28 @@ const elements = {
     borderColor: document.getElementById('borderColor'),
     borderOpacity: document.getElementById('borderOpacity'),
     borderOpacityValue: document.getElementById('borderOpacityValue'),
-    resetThemeBtn: document.getElementById('resetThemeBtn')
+    resetThemeBtn: document.getElementById('resetThemeBtn'),
+    // App settings
+    startOnBoot: document.getElementById('startOnBoot'),
+    startMinimized: document.getElementById('startMinimized'),
+    closeToTray: document.getElementById('closeToTray'),
+    uiUpdateInterval: document.getElementById('uiUpdateInterval'),
+    uiUpdateIntervalValue: document.getElementById('uiUpdateIntervalValue'),
+    // Section visibility
+    showSessionSection: document.getElementById('showSessionSection'),
+    showWeeklySection: document.getElementById('showWeeklySection'),
+    // Session element visibility
+    sessionShowLabel: document.getElementById('sessionShowLabel'),
+    sessionShowBar: document.getElementById('sessionShowBar'),
+    sessionShowPercentage: document.getElementById('sessionShowPercentage'),
+    sessionShowCircle: document.getElementById('sessionShowCircle'),
+    sessionShowTime: document.getElementById('sessionShowTime'),
+    // Weekly element visibility
+    weeklyShowLabel: document.getElementById('weeklyShowLabel'),
+    weeklyShowBar: document.getElementById('weeklyShowBar'),
+    weeklyShowPercentage: document.getElementById('weeklyShowPercentage'),
+    weeklyShowCircle: document.getElementById('weeklyShowCircle'),
+    weeklyShowTime: document.getElementById('weeklyShowTime')
 };
 
 // Initialize
@@ -64,6 +84,14 @@ async function init() {
     // Load tray update interval
     const interval = await window.electronAPI.getTrayUpdateInterval();
     loadTrayUpdateInterval(interval);
+
+    // Load app settings
+    const appSettings = await window.electronAPI.getAppSettings();
+    loadAppSettings(appSettings);
+
+    // Load UI visibility settings
+    const uiVisibility = await window.electronAPI.getUIVisibility();
+    loadUIVisibility(uiVisibility);
 
     // Load theme settings
     await loadThemeSettings();
@@ -112,10 +140,6 @@ function setupEventListeners() {
         await window.electronAPI.deleteCredentials();
         window.close();
         window.electronAPI.openLogin();
-    });
-
-    elements.coffeeBtn.addEventListener('click', () => {
-        window.electronAPI.openExternal('https://paypal.me/SlavomirDurej?country.x=GB&locale.x=en_GB');
     });
 
     // Window controls
@@ -220,6 +244,35 @@ function setupEventListeners() {
 
     // Reset theme button
     elements.resetThemeBtn.addEventListener('click', resetTheme);
+
+    // App settings event listeners
+    elements.startOnBoot.addEventListener('change', saveAppSettings);
+    elements.startMinimized.addEventListener('change', saveAppSettings);
+    elements.closeToTray.addEventListener('change', saveAppSettings);
+
+    elements.uiUpdateInterval.addEventListener('input', () => {
+        elements.uiUpdateIntervalValue.textContent = elements.uiUpdateInterval.value;
+    });
+
+    elements.uiUpdateInterval.addEventListener('change', saveAppSettings);
+
+    // Section visibility event listeners
+    elements.showSessionSection.addEventListener('change', saveUIVisibility);
+    elements.showWeeklySection.addEventListener('change', saveUIVisibility);
+
+    // Session element visibility event listeners
+    elements.sessionShowLabel.addEventListener('change', saveUIVisibility);
+    elements.sessionShowBar.addEventListener('change', saveUIVisibility);
+    elements.sessionShowPercentage.addEventListener('change', saveUIVisibility);
+    elements.sessionShowCircle.addEventListener('change', saveUIVisibility);
+    elements.sessionShowTime.addEventListener('change', saveUIVisibility);
+
+    // Weekly element visibility event listeners
+    elements.weeklyShowLabel.addEventListener('change', saveUIVisibility);
+    elements.weeklyShowBar.addEventListener('change', saveUIVisibility);
+    elements.weeklyShowPercentage.addEventListener('change', saveUIVisibility);
+    elements.weeklyShowCircle.addEventListener('change', saveUIVisibility);
+    elements.weeklyShowTime.addEventListener('change', saveUIVisibility);
 }
 
 // Helper functions
@@ -461,6 +514,69 @@ function applyThemeToSettings(theme) {
             el.style.color = theme.textPrimary;
         }
     });
+}
+
+// App settings functions
+function loadAppSettings(settings) {
+    elements.startOnBoot.checked = settings.startOnBoot || false;
+    elements.startMinimized.checked = settings.startMinimized || false;
+    elements.closeToTray.checked = settings.closeToTray || false;
+    elements.uiUpdateInterval.value = settings.uiUpdateInterval || 30;
+    elements.uiUpdateIntervalValue.textContent = settings.uiUpdateInterval || 30;
+}
+
+async function saveAppSettings() {
+    const settings = {
+        startOnBoot: elements.startOnBoot.checked,
+        startMinimized: elements.startMinimized.checked,
+        closeToTray: elements.closeToTray.checked,
+        uiUpdateInterval: parseInt(elements.uiUpdateInterval.value)
+    };
+
+    await window.electronAPI.setAppSettings(settings);
+}
+
+// UI visibility functions
+function loadUIVisibility(visibility) {
+    // Section visibility
+    elements.showSessionSection.checked = visibility.showSessionSection !== false;
+    elements.showWeeklySection.checked = visibility.showWeeklySection !== false;
+
+    // Session elements
+    elements.sessionShowLabel.checked = visibility.sessionShowLabel !== false;
+    elements.sessionShowBar.checked = visibility.sessionShowBar !== false;
+    elements.sessionShowPercentage.checked = visibility.sessionShowPercentage !== false;
+    elements.sessionShowCircle.checked = visibility.sessionShowCircle !== false;
+    elements.sessionShowTime.checked = visibility.sessionShowTime !== false;
+
+    // Weekly elements
+    elements.weeklyShowLabel.checked = visibility.weeklyShowLabel !== false;
+    elements.weeklyShowBar.checked = visibility.weeklyShowBar !== false;
+    elements.weeklyShowPercentage.checked = visibility.weeklyShowPercentage !== false;
+    elements.weeklyShowCircle.checked = visibility.weeklyShowCircle !== false;
+    elements.weeklyShowTime.checked = visibility.weeklyShowTime !== false;
+}
+
+async function saveUIVisibility() {
+    const visibility = {
+        // Section visibility
+        showSessionSection: elements.showSessionSection.checked,
+        showWeeklySection: elements.showWeeklySection.checked,
+        // Session elements
+        sessionShowLabel: elements.sessionShowLabel.checked,
+        sessionShowBar: elements.sessionShowBar.checked,
+        sessionShowPercentage: elements.sessionShowPercentage.checked,
+        sessionShowCircle: elements.sessionShowCircle.checked,
+        sessionShowTime: elements.sessionShowTime.checked,
+        // Weekly elements
+        weeklyShowLabel: elements.weeklyShowLabel.checked,
+        weeklyShowBar: elements.weeklyShowBar.checked,
+        weeklyShowPercentage: elements.weeklyShowPercentage.checked,
+        weeklyShowCircle: elements.weeklyShowCircle.checked,
+        weeklyShowTime: elements.weeklyShowTime.checked
+    };
+
+    await window.electronAPI.setUIVisibility(visibility);
 }
 
 // Setup collapsible sections

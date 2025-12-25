@@ -43,6 +43,10 @@ async function init() {
     const themeSettings = await window.electronAPI.getThemeSettings();
     applyThemePreferences(themeSettings);
 
+    // Load and apply UI visibility settings
+    const uiVisibility = await window.electronAPI.getUIVisibility();
+    applyUIVisibility(uiVisibility);
+
     if (credentials.sessionKey && credentials.organizationId) {
         showMainContent();
         await fetchUsageData();
@@ -123,6 +127,12 @@ function setupEventListeners() {
     window.electronAPI.onThemeChanged((theme) => {
         console.log('Theme changed, applying new theme');
         applyThemePreferences(theme);
+    });
+
+    // Listen for UI visibility changes from settings window
+    window.electronAPI.onUIVisibilityChanged((visibility) => {
+        console.log('UI visibility changed, applying new settings');
+        applyUIVisibility(visibility);
     });
 }
 
@@ -434,12 +444,164 @@ function applyThemePreferences(theme) {
     }
 }
 
+// UI visibility management
+function applyUIVisibility(visibility) {
+    const usageSections = document.querySelectorAll('.usage-section');
+    if (usageSections.length < 2) return;
+
+    const sessionSection = usageSections[0];
+    const weeklySection = usageSections[1];
+
+    // Default to true if not explicitly set to false
+    const showSessionSection = visibility.showSessionSection !== false;
+    const showWeeklySection = visibility.showWeeklySection !== false;
+    const sessionShowLabel = visibility.sessionShowLabel !== false;
+    const sessionShowBar = visibility.sessionShowBar !== false;
+    const sessionShowPercentage = visibility.sessionShowPercentage !== false;
+    const sessionShowCircle = visibility.sessionShowCircle !== false;
+    const sessionShowTime = visibility.sessionShowTime !== false;
+    const weeklyShowLabel = visibility.weeklyShowLabel !== false;
+    const weeklyShowBar = visibility.weeklyShowBar !== false;
+    const weeklyShowPercentage = visibility.weeklyShowPercentage !== false;
+    const weeklyShowCircle = visibility.weeklyShowCircle !== false;
+    const weeklyShowTime = visibility.weeklyShowTime !== false;
+
+    // Session elements
+    const sessionLabel = sessionSection.querySelector('.usage-label');
+    const sessionBar = sessionSection.querySelector('.progress-bar');
+    const sessionPercentage = sessionSection.querySelector('.usage-percentage');
+    const sessionTimerContainer = sessionSection.querySelector('.timer-container');
+    const sessionTimerSVG = sessionSection.querySelector('.mini-timer');
+    const sessionTimeText = sessionSection.querySelector('.timer-text');
+
+    if (sessionLabel) sessionLabel.style.display = sessionShowLabel ? 'block' : 'none';
+    if (sessionBar) sessionBar.style.display = sessionShowBar ? 'block' : 'none';
+    if (sessionPercentage) sessionPercentage.style.display = sessionShowPercentage ? 'block' : 'none';
+    if (sessionTimerSVG) sessionTimerSVG.style.display = sessionShowCircle ? 'block' : 'none';
+    if (sessionTimeText) sessionTimeText.style.display = sessionShowTime ? 'block' : 'none';
+
+    // Hide timer container if both circle and time are hidden
+    if (sessionTimerContainer) {
+        sessionTimerContainer.style.display = (sessionShowCircle || sessionShowTime) ? 'flex' : 'none';
+    }
+
+    // Weekly elements
+    const weeklyLabel = weeklySection.querySelector('.usage-label');
+    const weeklyBar = weeklySection.querySelector('.progress-bar');
+    const weeklyPercentage = weeklySection.querySelector('.usage-percentage');
+    const weeklyTimerContainer = weeklySection.querySelector('.timer-container');
+    const weeklyTimerSVG = weeklySection.querySelector('.mini-timer');
+    const weeklyTimeText = weeklySection.querySelector('.timer-text');
+
+    if (weeklyLabel) weeklyLabel.style.display = weeklyShowLabel ? 'block' : 'none';
+    if (weeklyBar) weeklyBar.style.display = weeklyShowBar ? 'block' : 'none';
+    if (weeklyPercentage) weeklyPercentage.style.display = weeklyShowPercentage ? 'block' : 'none';
+    if (weeklyTimerSVG) weeklyTimerSVG.style.display = weeklyShowCircle ? 'block' : 'none';
+    if (weeklyTimeText) weeklyTimeText.style.display = weeklyShowTime ? 'block' : 'none';
+
+    // Hide timer container if both circle and time are hidden
+    if (weeklyTimerContainer) {
+        weeklyTimerContainer.style.display = (weeklyShowCircle || weeklyShowTime) ? 'flex' : 'none';
+    }
+
+    // Show/hide entire sections
+    if (sessionSection) sessionSection.style.display = showSessionSection ? 'flex' : 'none';
+    if (weeklySection) weeklySection.style.display = showWeeklySection ? 'flex' : 'none';
+
+    // Adjust window height based on visible content
+    adjustWindowHeight();
+}
+
+// Adjust window size based on visible content
+function adjustWindowHeight() {
+    const usageSections = document.querySelectorAll('.usage-section');
+    let visibleSections = 0;
+    let maxWidthNeeded = 0;
+
+    usageSections.forEach(section => {
+        if (section.style.display !== 'none') {
+            visibleSections++;
+
+            // Calculate width needed for this section
+            let sectionWidth = 60; // Base padding (30px left + 30px right for safety)
+
+            // Check what's visible in this section
+            const label = section.querySelector('.usage-label');
+            const bar = section.querySelector('.progress-bar');
+            const percentage = section.querySelector('.usage-percentage');
+            const timerContainer = section.querySelector('.timer-container');
+
+            // Count visible elements and calculate width
+            let visibleElements = 0;
+
+            if (label && label.style.display !== 'none') {
+                sectionWidth += 120; // Label width + buffer
+                visibleElements++;
+            }
+            if (bar && bar.style.display !== 'none') {
+                sectionWidth += 150; // Minimum readable bar width
+                visibleElements++;
+            }
+            if (percentage && percentage.style.display !== 'none') {
+                sectionWidth += 55; // Percentage width
+                visibleElements++;
+            }
+            if (timerContainer) {
+                const timerSVG = timerContainer.querySelector('.mini-timer');
+                const timeText = timerContainer.querySelector('.timer-text');
+                if ((timerSVG && timerSVG.style.display !== 'none') ||
+                    (timeText && timeText.style.display !== 'none')) {
+                    sectionWidth += 100; // Timer container width
+                    visibleElements++;
+                }
+            }
+
+            // Add gaps between elements (16px each)
+            if (visibleElements > 1) {
+                sectionWidth += (visibleElements - 1) * 16;
+            }
+
+            // Ensure minimum width even if only one element visible
+            sectionWidth = Math.max(sectionWidth, 200);
+
+            maxWidthNeeded = Math.max(maxWidthNeeded, sectionWidth);
+        }
+    });
+
+    // Calculate height: title bar (36px) + padding + sections
+    const titleBarHeight = 36;
+    const contentPadding = 40; // 20px top + 20px bottom
+    const sectionHeight = 40;
+    const newHeight = titleBarHeight + contentPadding + (visibleSections * sectionHeight);
+
+    // Title bar needs space for "Claude Usage" + buttons
+    // Minimum: logo (19px) + gap (8px) + text (~110px) + buttons (4 * 28px + 3 * 8px gaps) = ~280px
+    const minTitleBarWidth = 300;
+
+    // Ensure we have content width or use minimum
+    const contentWidth = Math.max(maxWidthNeeded, 200);
+
+    // Final dimensions - use the larger of content width or title bar width
+    const finalWidth = Math.max(contentWidth, minTitleBarWidth);
+    const finalHeight = Math.max(newHeight, titleBarHeight + 60);
+
+    // Clamp to window constraints
+    const clampedWidth = Math.min(Math.max(finalWidth, 320), 600);
+    const clampedHeight = Math.min(Math.max(finalHeight, 96), 180);
+
+    window.electronAPI.setWindowSize({ width: clampedWidth, height: clampedHeight });
+}
+
 // Auto-update management
-function startAutoUpdate() {
+async function startAutoUpdate() {
     stopAutoUpdate();
+    // Load update interval from settings
+    const appSettings = await window.electronAPI.getAppSettings();
+    const intervalMs = (appSettings.uiUpdateInterval || 300) * 1000; // Convert to milliseconds
+
     updateInterval = setInterval(() => {
         fetchUsageData();
-    }, UPDATE_INTERVAL);
+    }, intervalMs);
 }
 
 function stopAutoUpdate() {

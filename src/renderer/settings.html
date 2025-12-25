@@ -149,6 +149,139 @@
                         <button class="btn-secondary" id="resetThemeBtn">Reset Theme</button>
                     </div>
                 </div>
+
+                <!-- UI Update Interval -->
+                <div class="setting-group">
+                    <h3>Update Interval</h3>
+                    <p class="setting-description">How often to refresh usage data (in seconds)</p>
+
+                    <div class="slider-container">
+                        <input type="range" id="uiUpdateInterval" min="10" max="300" value="30" step="10">
+                        <div class="slider-value">
+                            <span id="uiUpdateIntervalValue">30</span> seconds
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Session Elements -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" id="sessionElementsHeader">
+                        <span>Current Session Elements</span>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="collapsible-content" id="sessionElementsContent">
+                        <div class="setting-item" style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showSessionSection" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Current Session</span>
+                            </label>
+                            <p class="setting-description">Hide entire Current Session section</p>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sessionShowLabel" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Label Text</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sessionShowBar" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Progress Bar</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sessionShowPercentage" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Percentage Text</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sessionShowCircle" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Countdown Circle</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sessionShowTime" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Time Text</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Limit Elements -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" id="weeklyElementsHeader">
+                        <span>Weekly Limit Elements</span>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="collapsible-content" id="weeklyElementsContent">
+                        <div class="setting-item" style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showWeeklySection" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Weekly Limit</span>
+                            </label>
+                            <p class="setting-description">Hide entire Weekly Limit section</p>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="weeklyShowLabel" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Label Text</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="weeklyShowBar" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Progress Bar</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="weeklyShowPercentage" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Percentage Text</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="weeklyShowCircle" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Countdown Circle</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="weeklyShowTime" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Time Text</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <div class="divider"></div>
@@ -282,26 +415,49 @@
 
             <div class="divider"></div>
 
-            <!-- Support -->
+            <!-- Application Settings -->
             <section class="settings-section">
-                <button class="btn-coffee" id="coffeeBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
-                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
-                        <line x1="6" y1="2" x2="6" y2="4" />
-                        <line x1="10" y1="2" x2="10" y2="4" />
-                        <line x1="14" y1="2" x2="14" y2="4" />
-                    </svg>
-                    If you find this useful, buy me a coffee!
-                </button>
+                <h2>Application</h2>
 
-                <!-- Disclaimer -->
-                <p class="disclaimer">
-                    <strong>Disclaimer:</strong> Unofficial tool not affiliated with Anthropic. Use at your own
-                    discretion.
-                </p>
+                <div class="setting-group">
+                    <h3>Start on System Boot</h3>
+                    <p class="setting-description">Automatically launch when Windows starts</p>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="startOnBoot">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Enabled</span>
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Start Minimized</h3>
+                    <p class="setting-description">Start hidden in system tray</p>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="startMinimized">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Enabled</span>
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Close to Tray</h3>
+                    <p class="setting-description">Minimize to tray instead of closing</p>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="closeToTray">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Enabled</span>
+                    </label>
+                </div>
             </section>
+
+            <!-- Disclaimer -->
+            <p class="disclaimer" style="margin-top: 32px; text-align: center;">
+                <strong>Disclaimer:</strong> Unofficial tool not affiliated with Anthropic. Use at your own
+                discretion.
+            </p>
         </div>
     </div>
 
