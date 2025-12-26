@@ -774,9 +774,11 @@ ipcMain.handle('set-app-settings', (event, settings) => {
 
   // Apply auto-launch setting
   if (settings.hasOwnProperty('startOnBoot')) {
+    const isDev = !app.isPackaged;
     app.setLoginItemSettings({
       openAtLogin: settings.startOnBoot,
-      path: process.execPath
+      path: process.execPath,
+      args: isDev ? [app.getAppPath()] : []
     });
   }
 
@@ -820,9 +822,11 @@ app.whenReady().then(() => {
   });
 
   // Set auto-launch
+  const isDev = !app.isPackaged;
   app.setLoginItemSettings({
     openAtLogin: appSettings.startOnBoot,
-    path: process.execPath
+    path: process.execPath,
+    args: isDev ? [app.getAppPath()] : []
   });
 
   createMainWindow();
